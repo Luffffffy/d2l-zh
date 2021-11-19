@@ -9,7 +9,7 @@
 
 这推动了“上下文敏感”词表示的发展，其中词的表征取决于它们的上下文。因此，词元$x$的上下文敏感表示是函数$f(x, c(x))$，其取决于$x$及其上下文$c(x)$。流行的上下文敏感表示包括TagLM（language-model-augmented sequence tagger，语言模型增强的序列标记器） :cite:`Peters.Ammar.Bhagavatula.ea.2017`、CoVe（Context Vectors，上下文向量） :cite:`McCann.Bradbury.Xiong.ea.2017`和ELMo（Embeddings from Language Models，来自语言模型的嵌入） :cite:`Peters.Neumann.Iyyer.ea.2018`。
 
-例如，通过将整个序列作为输入，ELMo是为输入序列中的每个单词分配一个表示的函数。具体来说，ELMo将来自预训练的双向长短期记忆网络的所有中间层表示组合为输出表示。然后，ELMo的表示将作为附加特征添加到下游任务的现有监督模型中，例如通过将ELMo的表示和现有模型中词元的原始表示（例如GloVe）连结起来。一方面，在加入ELMo表示后，冻结了预训练的双向LSTM模型中的所有权值。另一方面，现有的监督模型是专门为给定的任务定制的。利用当时不同任务的不同最佳模型，添加ELMo改进了六种自然语言处理任务的技术水平：情感分析、自然语言推断、语义角色标注、共指消解、命名实体识别和问答。
+例如，通过将整个序列作为输入，ELMo是为输入序列中的每个单词分配一个表示的函数。具体来说，ELMo将来自预训练的双向长短期记忆网络的所有中间层表示组合为输出表示。然后，ELMo的表示将作为附加特征添加到下游任务的现有监督模型中，例如通过将ELMo的表示和现有模型中词元的原始表示（例如GloVe）连结起来。一方面，在加入ELMo表示后，冻结了预训练的双向LSTM模型中的所有权重。另一方面，现有的监督模型是专门为给定的任务定制的。利用当时不同任务的不同最佳模型，添加ELMo改进了六种自然语言处理任务的技术水平：情感分析、自然语言推断、语义角色标注、共指消解、命名实体识别和问答。
 
 ## 从特定于任务到不可知任务
 
@@ -48,7 +48,7 @@ from torch import nn
 
 在自然语言处理中，有些任务（如情感分析）以单个文本作为输入，而有些任务（如自然语言推断）以一对文本序列作为输入。BERT输入序列明确地表示单个文本和文本对。当输入为单个文本时，BERT输入序列是特殊类别词元“&lt;cls&gt;”、文本序列的标记、以及特殊分隔词元“&lt;sep&gt;”的连结。当输入为文本对时，BERT输入序列是“&lt;cls&gt;”、第一个文本序列的标记、“&lt;sep&gt;”、第二个文本序列标记、以及“&lt;sep&gt;”的连结。我们将始终如一地将术语“BERT输入序列”与其他类型的“序列”区分开来。例如，一个*BERT输入序列*可以包括一个*文本序列*或两个*文本序列*。
 
-为了区分文本对，可学习的片段嵌入$\mathbf{e}_A$和$\mathbf{e}_B$分别被添加到第一序列和第二序列的词元嵌入中。对于单文本输入，仅使用$\mathbf{e}_A$。
+为了区分文本对，根据输入序列学到的片段嵌入$\mathbf{e}_A$和$\mathbf{e}_B$分别被添加到第一序列和第二序列的词元嵌入中。对于单文本输入，仅使用$\mathbf{e}_A$。
 
 下面的`get_tokens_and_segments`将一个句子或两个句子作为输入，然后返回BERT输入序列的标记及其相应的片段索引。
 
@@ -255,7 +255,7 @@ mlm_Y_hat = mlm(encoded_X, mlm_positions)
 mlm_Y_hat.shape
 ```
 
-通过掩码下的预测词元`mlm_Y`的真实值`mlm_Y_hat`，我们可以计算在BERT预训练中的掩蔽语言模型任务的交叉熵损失。
+通过掩码下的预测词元`mlm_Y`的真实标签`mlm_Y_hat`，我们可以计算在BERT预训练中的遮蔽语言模型任务的交叉熵损失。
 
 ```{.python .input}
 mlm_Y = np.array([[7, 8, 9], [10, 20, 30]])
@@ -317,8 +317,6 @@ nsp_Y_hat.shape
 
 ```{.python .input}
 #@tab pytorch
-# 默认情况下，PyTorch不会像mxnet中那样展平张量
-# 如果flatten=True，则除第一个输入数据轴外，所有输入数据轴都折叠在一起
 encoded_X = torch.flatten(encoded_X, start_dim=1)
 # NSP的输入形状: (batch size, `num_hiddens`)
 nsp = NextSentencePred(encoded_X.shape[-1])

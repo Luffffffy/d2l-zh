@@ -134,7 +134,7 @@ $$f(x) = \sum_{i=1}^n \frac{K(x - x_i)}{\sum_{j=1}^n K(x - x_j)} y_i,$$
 $$f(x) = \sum_{i=1}^n \alpha(x, x_i) y_i,$$
 :eqlabel:`eq_attn-pooling`
 
-其中$x$是查询，$(x_i, y_i)$是键值对。比较 :eqref:`eq_attn-pooling`和 :eqref:`eq_avg-pooling`，注意力汇聚是$y_i$的加权平均。将查询$x$和键$x_i$之间的关系建模为*注意力权重*（attetnion weight）$\alpha(x, x_i)$，如 :eqref:`eq_attn-pooling`所示，这个权重将被分配给每一个对应值$y_i$。对于任何查询，模型在所有键值对上的注意力权重都是一个有效的概率分布：它们是非负数的，并且总和为1。
+其中$x$是查询，$(x_i, y_i)$是键值对。比较 :eqref:`eq_attn-pooling`和 :eqref:`eq_avg-pooling`，注意力汇聚是$y_i$的加权平均。将查询$x$和键$x_i$之间的关系建模为*注意力权重*（attention weight）$\alpha(x, x_i)$，如 :eqref:`eq_attn-pooling`所示，这个权重将被分配给每一个对应值$y_i$。对于任何查询，模型在所有键值对上的注意力权重都是一个有效的概率分布：它们是非负数的，并且总和为1。
 
 为了更好地理解注意力汇聚，仅考虑一个*高斯核*（Gaussian kernel），其定义为：
 
@@ -145,7 +145,7 @@ $$K(u) = \frac{1}{\sqrt{2\pi}} \exp(-\frac{u^2}{2}).$$
 $$\begin{aligned} f(x) &=\sum_{i=1}^n \alpha(x, x_i) y_i\\ &= \sum_{i=1}^n \frac{\exp\left(-\frac{1}{2}(x - x_i)^2\right)}{\sum_{j=1}^n \exp\left(-\frac{1}{2}(x - x_j)^2\right)} y_i \\&= \sum_{i=1}^n \mathrm{softmax}\left(-\frac{1}{2}(x - x_i)^2\right) y_i. \end{aligned}$$
 :eqlabel:`eq_nadaraya-watson-gaussian`
 
-在 :eqref:`eq_nadaraya-watson-gaussian`中，如果一个键$x_i$越是接近给定的查询$x$,那么分配给这个键对应值$y_i$的注意力权重就会越大,也就是“获得了更多的注意力”。
+在 :eqref:`eq_nadaraya-watson-gaussian`中，如果一个键$x_i$越是接近给定的查询$x$，那么分配给这个键对应值$y_i$的注意力权重就会越大，也就是“获得了更多的注意力”。
 
 值得注意的是，Nadaraya-Watson核回归是一个非参数模型。因此， :eqref:`eq_nadaraya-watson-gaussian`是*非参数的注意力汇聚*（nonparametric attention pooling）的例子。接下来，我们将基于这个非参数的注意力汇聚模型来绘制预测结果。结果是预测线是平滑的，并且比平均汇聚产生的线更接近真实。
 
@@ -396,8 +396,7 @@ animator = d2l.Animator(xlabel='epoch', ylabel='loss', xlim=[1, 5])
 
 for epoch in range(5):
     trainer.zero_grad()
-    # 注意：L2 Loss = 1/2 * MSE Loss。
-    # PyTorch 的 MSE Loss 与 MXNet 的 L2Loss 差一个 2 的因子，因此被除2。
+    # L2 Loss = 1/2 * MSE Loss
     l = loss(net(x_train, keys, values), y_train) / 2
     l.sum().backward()
     trainer.step()
