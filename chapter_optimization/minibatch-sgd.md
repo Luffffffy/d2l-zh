@@ -95,7 +95,7 @@ C = tf.Variable(d2l.normal([256, 256], 0, 1))
 按元素分配只需遍历分别为$\mathbf{B}$和$\mathbf{C}$的所有行和列，即可将该值分配给$\mathbf{A}$。
 
 ```{.python .input}
-# Compute A = BC one element at a time
+# 逐元素计算A=BC
 timer.start()
 for i in range(256):
     for j in range(256):
@@ -106,7 +106,7 @@ timer.stop()
 
 ```{.python .input}
 #@tab pytorch
-# Compute A = BC one element at a time
+# 逐元素计算A=BC
 timer.start()
 for i in range(256):
     for j in range(256):
@@ -116,7 +116,7 @@ timer.stop()
 
 ```{.python .input}
 #@tab tensorflow
-# Compute A = BC one element at a time
+# 逐元素计算A=BC
 timer.start()
 for i in range(256):
     for j in range(256):
@@ -127,7 +127,7 @@ timer.stop()
 更快的策略是执行按列分配。
 
 ```{.python .input}
-# Compute A = BC one column at a time
+# 逐列计算A=BC
 timer.start()
 for j in range(256):
     A[:, j] = np.dot(B, C[:, j])
@@ -137,7 +137,7 @@ timer.stop()
 
 ```{.python .input}
 #@tab pytorch
-# Compute A = BC one column at a time
+# 逐列计算A=BC
 timer.start()
 for j in range(256):
     A[:, j] = torch.mv(B, C[:, j])
@@ -530,9 +530,7 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=4):
     net.apply(init_weights)
 
     optimizer = trainer_fn(net.parameters(), **hyperparams)
-
-    loss = nn.MSELoss()
-    # L2 Loss = 1/2 * MSE Loss
+    loss = nn.MSELoss(reduction='none')
     animator = d2l.Animator(xlabel='epoch', ylabel='loss',
                             xlim=[0, num_epochs], ylim=[0.22, 0.35])
     n, timer = 0, d2l.Timer()
@@ -541,14 +539,15 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=4):
             optimizer.zero_grad()
             out = net(X)
             y = y.reshape(out.shape)
-            l = loss(out, y)/2
-            l.backward()
+            l = loss(out, y)
+            l.mean().backward()
             optimizer.step()
             n += X.shape[0]
             if n % 200 == 0:
                 timer.stop()
+                # MSELoss计算平方误差时不带系数1/2
                 animator.add(n/X.shape[0]/len(data_iter),
-                             (d2l.evaluate_loss(net, data_iter, loss)/2,))
+                             (d2l.evaluate_loss(net, data_iter, loss) / 2,))
                 timer.start()
     print(f'loss: {animator.Y[0][-1]:.3f}, {timer.avg():.3f} sec/epoch')
 ```
@@ -563,9 +562,6 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=2):
             kernel_initializer=tf.random_normal_initializer(stddev=0.01)))
     optimizer = trainer_fn(**hyperparams)
     loss = tf.keras.losses.MeanSquaredError()
-    # 注意: L2 Loss = 1/2 * MSE Loss。
-    # TensorFlow的MSE损失与MXNet的L2损失大概相差2倍。
-    # 因此，我们将TensorFlow中的损失减半
     animator = d2l.Animator(xlabel='epoch', ylabel='loss',
                             xlim=[0, num_epochs], ylim=[0.22, 0.35])
     n, timer = 0, d2l.Timer()
@@ -573,7 +569,7 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=2):
         for X, y in data_iter:
             with tf.GradientTape() as g:
                 out = net(X)
-                l = loss(y, out)/2
+                l = loss(y, out)
                 params = net.trainable_variables
                 grads = g.gradient(l, params)
             optimizer.apply_gradients(zip(grads, params))
@@ -582,7 +578,8 @@ def train_concise_ch11(trainer_fn, hyperparams, data_iter, num_epochs=2):
                 timer.stop()
                 p = n/X.shape[0]
                 q = p/tf.data.experimental.cardinality(data_iter).numpy()
-                r = (d2l.evaluate_loss(net, data_iter, loss)/2,)
+                # MeanSquaredError计算平方误差时不带系数1/2
+                r = (d2l.evaluate_loss(net, data_iter, loss) / 2,)
                 animator.add(q, r)
                 timer.start()
     print(f'loss: {animator.Y[0][-1]:.3f}, {timer.avg():.3f} sec/epoch')
@@ -599,7 +596,7 @@ train_concise_ch11('sgd', {'learning_rate': 0.05}, data_iter)
 #@tab pytorch
 data_iter, _ = get_data_ch11(10)
 trainer = torch.optim.SGD
-train_concise_ch11(trainer, {'lr': 0.05}, data_iter)
+train_concise_ch11(trainer, {'lr': 0.01}, data_iter)
 ```
 
 ```{.python .input}

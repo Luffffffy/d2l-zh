@@ -114,7 +114,6 @@ class Vocab:  #@save
         self.idx_to_token = ['<unk>'] + reserved_tokens
         self.token_to_idx = {token: idx
                              for idx, token in enumerate(self.idx_to_token)}
-        self.idx_to_token, self.token_to_idx = [], dict()
         for token, freq in self._token_freqs:
             if freq < min_freq:
                 break
@@ -145,7 +144,7 @@ class Vocab:  #@save
 
 def count_corpus(tokens):  #@save
     """统计词元的频率"""
-    # 这里的 `tokens` 是 1D 列表或 2D 列表
+    # 这里的tokens是1D列表或2D列表
     if len(tokens) == 0 or isinstance(tokens[0], list):
         # 将词元列表展平成一个列表
         tokens = [token for line in tokens for token in line]
