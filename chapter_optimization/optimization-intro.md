@@ -98,7 +98,24 @@ annotate('saddle point', (0, -0.2), (-0.52, -5.0))
 如下例所示，较高维度的鞍点甚至更加隐蔽。考虑这个函数$f(x, y) = x^2 - y^2$。它的鞍点为$(0, 0)$。这是关于$y$的最大值，也是关于$x$的最小值。此外，它*看起来*像马鞍，这就是这个数学属性的名字由来。
 
 ```{.python .input}
-#@tab all
+#@tab mxnet
+x, y = d2l.meshgrid(
+    d2l.linspace(-1.0, 1.0, 101), d2l.linspace(-1.0, 1.0, 101))
+z = x**2 - y**2
+ax = d2l.plt.figure().add_subplot(111, projection='3d')
+ax.plot_wireframe(x.asnumpy(), y.asnumpy(), z.asnumpy(),
+                  **{'rstride': 10, 'cstride': 10})
+ax.plot([0], [0], [0], 'rx')
+ticks = [-1, 0, 1]
+d2l.plt.xticks(ticks)
+d2l.plt.yticks(ticks)
+ax.set_zticks(ticks)
+d2l.plt.xlabel('x')
+d2l.plt.ylabel('y');
+```
+
+```{.python .input}
+#@tab pytorch, tensorflow
 x, y = d2l.meshgrid(
     d2l.linspace(-1.0, 1.0, 101), d2l.linspace(-1.0, 1.0, 101))
 z = x**2 - y**2
@@ -114,7 +131,7 @@ d2l.plt.xlabel('x')
 d2l.plt.ylabel('y');
 ```
 
-我们假设函数的输入是$k$维向量，其输出是标量，因此其Hessian矩阵（也称黑塞矩阵）将有$k$特征值（参考[online appendix on eigendecompositions](https://d2l.ai/chapter_appendix-mathematics-for-deep-learning/eigendecomposition.html）)。函数的解决方案可以是局部最小值、局部最大值或函数梯度为零的位置处的鞍点：
+我们假设函数的输入是$k$维向量，其输出是标量，因此其Hessian矩阵（也称黑塞矩阵）将有$k$特征值（参考[online appendix on eigendecompositions](https://d2l.ai/chapter_appendix-mathematics-for-deep-learning/eigendecomposition.html))。函数的解决方案可以是局部最小值、局部最大值或函数梯度为零的位置处的鞍点：
 
 * 当函数在零梯度位置处的Hessian矩阵的特征值全部为正值时，我们有该函数的局部最小值。
 * 当函数在零梯度位置处的Hessian矩阵的特征值全部为负值时，我们有该函数的局部最大值。
@@ -124,7 +141,7 @@ d2l.plt.ylabel('y');
 
 ### 梯度消失
 
-可能遇到的最隐蔽的问题是梯度消失。回想一下我们在 :numref:`subsec_activation-functions`中常用的激活函数及其衍生函数。例如，假设我们想最小化函数$f(x) = \tanh(x)$，然后我们恰好从$x = 4$开始。正如我们所看到的那样，$f$的梯度接近零。更具体地说，$f'(x) = 1 - \tanh^2(x)$，因此是$f'(4) = 0.0013$。因此，在我们取得进展之前，优化将会停滞很长一段时间。事实证明，这是在引入ReLU激活函数之前训练深度学习模型相当棘手的原因之一。
+可能遇到的最隐蔽的问题是梯度消失。回想一下我们在 :numref:`subsec_activation_functions`中常用的激活函数及其衍生函数。例如，假设我们想最小化函数$f(x) = \tanh(x)$，然后我们恰好从$x = 4$开始。正如我们所看到的那样，$f$的梯度接近零。更具体地说，$f'(x) = 1 - \tanh^2(x)$，因此是$f'(4) = 0.0013$。因此，在我们取得进展之前，优化将会停滞很长一段时间。事实证明，这是在引入ReLU激活函数之前训练深度学习模型相当棘手的原因之一。
 
 ```{.python .input}
 #@tab all
